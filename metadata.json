@@ -1,0 +1,8 @@
+{
+  "name": "Tio Patinhas Revoltado",
+  "description": "Um assistente financeiro sarcástico que te julga pelos seus gastos fúteis enquanto organiza suas finanças com precisão técnica.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
