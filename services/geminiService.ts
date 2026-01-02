@@ -36,16 +36,16 @@ Receber inputs bagunçados (texto, áudio transcrito, OCR de fotos ou listas de 
 `;
 
 export class GeminiService {
-  private getAI() {
-    // Inicializa sempre com a chave atual do process.env
-    return new GoogleGenAI({ apiKey: (window as any).process?.env?.API_KEY || (process.env.API_KEY as string) });
-  }
-
   private chatInstance: Chat | null = null;
+
+  private getApiKey(): string {
+    // Tenta pegar de várias formas para garantir que o deploy não quebre
+    return (window as any).process?.env?.API_KEY || (process.env.API_KEY as string) || "";
+  }
 
   private getChat() {
     if (!this.chatInstance) {
-      const ai = this.getAI();
+      const ai = new GoogleGenAI({ apiKey: this.getApiKey() });
       this.chatInstance = ai.chats.create({
         model: 'gemini-3-flash-preview',
         config: {
@@ -57,7 +57,7 @@ export class GeminiService {
   }
 
   async sendMessage(message: string, imageBase64?: string, audioBase64?: string): Promise<{ text: string; expense?: Expense }> {
-    const ai = this.getAI();
+    const ai = new GoogleGenAI({ apiKey: this.getApiKey() });
     const chat = this.getChat();
     let result: GenerateContentResponse;
 
@@ -70,7 +70,6 @@ export class GeminiService {
         }
         
         if (audioBase64) {
-          // Nota: 'audio/pcm;rate=16000' é o sugerido para Live, mas para Content API o webm/mp3 costuma funcionar bem se base64 for válido
           parts.push({ inlineData: { data: audioBase64.split(',')[1], mimeType: 'audio/webm' } });
         }
 
@@ -95,7 +94,7 @@ export class GeminiService {
 
   async generateSpeech(text: string): Promise<string | undefined> {
     try {
-      const ai = this.getAI();
+      const ai = new GoogleGenAI({ apiKey: this.getApiKey() });
       const speechText = text.split('```json')[0].trim();
       if (!speechText) return undefined;
 
@@ -133,9 +132,7 @@ export class GeminiService {
           timestamp: parsed.timestamp || new Date().toISOString()
         };
       }
-    } catch (e) {
-      // Ignora erro de parsing se não houver JSON
-    }
+    } catch (e) {}
     return undefined;
   }
 }
